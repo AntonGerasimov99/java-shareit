@@ -6,7 +6,7 @@ import ru.practicum.shareit.exceptions.DuplicatedException;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.UserDTO;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.List;
@@ -17,36 +17,35 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserStorage userStorage;
-    private final UserMapper userMapper;
 
     @Override
-    public UserDTO create(UserDTO userDTO) {
+    public UserDto create(UserDto userDTO) {
         checkUserValid(userDTO);
-        User user = userStorage.create(userMapper.toUserFromDTO(userDTO));
-        return userMapper.toUserDTO(user);
+        User user = userStorage.create(UserMapper.toUserFromDTO(userDTO));
+        return UserMapper.toUserDTO(user);
     }
 
     @Override
-    public UserDTO get(Integer userId) {
-        return userMapper.toUserDTO(userStorage.get(userId));
+    public UserDto get(Integer userId) {
+        return UserMapper.toUserDTO(userStorage.get(userId));
     }
 
     @Override
-    public UserDTO update(UserDTO userDTO, Integer userId) {
+    public UserDto update(UserDto userDTO, Integer userId) {
         userDTO.setId(userId);
         if (userDTO.getEmail() != null) {
             if (!userDTO.getEmail().equals(get(userId).getEmail())) {
                 checkEmail(userDTO);
             }
         }
-        User user = userStorage.update(userMapper.toUserFromDTO(userDTO));
-        return userMapper.toUserDTO(user);
+        User user = userStorage.update(UserMapper.toUserFromDTO(userDTO));
+        return UserMapper.toUserDTO(user);
     }
 
     @Override
-    public List<UserDTO> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return userStorage.getAllUsers().stream()
-                .map(userMapper::toUserDTO)
+                .map(UserMapper::toUserDTO)
                 .collect(Collectors.toList());
     }
 
@@ -55,7 +54,7 @@ public class UserServiceImpl implements UserService {
         userStorage.deleteUser(userId);
     }
 
-    private void checkUserValid(UserDTO userDTO) {
+    private void checkUserValid(UserDto userDTO) {
         if (userDTO.getName().isBlank() || userDTO.getName() == null) {
             throw new ValidationElementException("Имя отсутствует");
         }
@@ -67,7 +66,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void checkEmail(UserDTO userDTO) {
+    private void checkEmail(UserDto userDTO) {
         if (userStorage.checkEmail(userDTO.getEmail())) {
             throw new DuplicatedException("Почта уже используется");
         }

@@ -7,7 +7,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Component("InMemoryItemStorage")
+@Component
 public class InMemoryItemStorage implements ItemStorage {
 
     private static int keyId = 0;
@@ -31,16 +31,7 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public Item update(Item item) {
-        Item oldItem = items.get(item.getId());
-        if (item.getName() == null || item.getName().isBlank()) {
-            item.setName(oldItem.getName());
-        }
-        if (item.getDescription() == null || item.getDescription().isEmpty()) {
-            item.setDescription(oldItem.getDescription());
-        }
-        if (item.getAvailable() == null) {
-            item.setAvailable(oldItem.getAvailable());
-        }
+        item = validateItemForUpdate(item);
         items.put(item.getId(), item);
         return get(item.getId());
     }
@@ -74,5 +65,19 @@ public class InMemoryItemStorage implements ItemStorage {
     @Override
     public boolean isItem(Integer itemId) {
         return items.containsKey(itemId);
+    }
+
+    public Item validateItemForUpdate(Item item) {
+        Item oldItem = items.get(item.getId());
+        if (item.getName() == null || item.getName().isBlank()) {
+            item.setName(oldItem.getName());
+        }
+        if (item.getDescription() == null || item.getDescription().isEmpty()) {
+            item.setDescription(oldItem.getDescription());
+        }
+        if (item.getAvailable() == null) {
+            item.setAvailable(oldItem.getAvailable());
+        }
+        return item;
     }
 }

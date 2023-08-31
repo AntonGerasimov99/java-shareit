@@ -8,7 +8,7 @@ import javax.validation.constraints.NotBlank;
 
 @Data
 @Builder
-public class UserDTO {
+public class UserDto {
 
     private Integer id;
     @NotBlank

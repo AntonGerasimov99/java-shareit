@@ -21,21 +21,20 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemStorage itemStorage;
     private final UserStorage userStorage;
-    private final ItemMapper itemMapper;
 
     @Override
     public ItemDto create(ItemDto itemDto, Integer userId) {
         isUser(userId);
         checkItemValid(itemDto);
         itemDto.setOwner(userId);
-        Item item = itemMapper.toItemFromDTO(itemDto);
+        Item item = ItemMapper.toItemFromDTO(itemDto);
         itemStorage.create(item);
         return get(item.getId());
     }
 
     @Override
     public ItemDto get(Integer itemId) {
-        return itemMapper.toItemDTO(itemStorage.get(itemId));
+        return ItemMapper.toItemDTO(itemStorage.get(itemId));
     }
 
     @Override
@@ -44,8 +43,8 @@ public class ItemServiceImpl implements ItemService {
         isUser(userId);
         isUserOwner(userId, itemDto.getId());
         itemDto.setOwner(userId);
-        Item item = itemMapper.toItemFromDTO(itemDto);
-        return itemMapper.toItemDTO(itemStorage.update(item));
+        Item item = ItemMapper.toItemFromDTO(itemDto);
+        return ItemMapper.toItemDTO(itemStorage.update(item));
     }
 
     @Override
@@ -53,7 +52,7 @@ public class ItemServiceImpl implements ItemService {
         isUser(userId);
         List<Item> items = itemStorage.getItemsByUserId(userId);
         return items.stream()
-                .map(itemMapper::toItemDTO)
+                .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
     }
 
@@ -64,7 +63,7 @@ public class ItemServiceImpl implements ItemService {
         }
         List<Item> items = itemStorage.search(text);
         return items.stream()
-                .map(itemMapper::toItemDTO)
+                .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
     }
 
