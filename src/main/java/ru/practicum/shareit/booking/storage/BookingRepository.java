@@ -36,7 +36,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     Optional<Booking> findFirstByItemIdAndStartIsBeforeOrderByStartDesc(Integer itemId, LocalDateTime time);
 
     // next bookings
-    Optional<Booking> findFirstByItemIdAndStartIsAfterAndStatusOrderByStartDesc
+    Optional<Booking> findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc
             (Integer itemId, LocalDateTime time, StatusEnum status);
 
 }

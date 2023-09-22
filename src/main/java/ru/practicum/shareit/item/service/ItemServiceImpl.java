@@ -21,6 +21,7 @@ import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -140,16 +141,24 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemDto updateBookings(ItemDto itemDto) {
-        Booking lastBooking = bookingService.getLastBooking(itemDto.getId());
-        Booking nextBooking = bookingService.getNextBooking(itemDto.getId());
-        itemDto.setLastBooking(lastBooking != null ? ItemDto.ListBooking.builder()
+        Optional<Booking> lastBooking = Optional.ofNullable(bookingService.getLastBooking(itemDto.getId()));
+        Optional<Booking> nextBooking = Optional.ofNullable(bookingService.getNextBooking(itemDto.getId()));
+        lastBooking.ifPresent(booking -> ItemDto.ListBooking.builder()
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .build());
+        nextBooking.ifPresent(booking -> ItemDto.ListBooking.builder()
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .build());
+        /*itemDto.setLastBooking(lastBooking != null ? ItemDto.ListBooking.builder()
                 .id(lastBooking.getId())
                 .bookerId(lastBooking.getBooker().getId())
                 .build() :null);
         itemDto.setNextBooking(nextBooking != null ? ItemDto.ListBooking.builder()
                 .id(nextBooking.getId())
                 .bookerId(nextBooking.getBooker().getId())
-                .build() :null);
+                .build() :null);*/
         return itemDto;
     }
 }

@@ -144,7 +144,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public Booking getNextBooking(Integer itemId) {
-        Booking booking = bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartDesc
+        Booking booking = bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc
                 (itemId, LocalDateTime.now(), StatusEnum.APPROVED).orElse(null);
         return booking;
     }
