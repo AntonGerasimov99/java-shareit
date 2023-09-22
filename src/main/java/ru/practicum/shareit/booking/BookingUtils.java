@@ -23,11 +23,11 @@ public class BookingUtils {
     private final ItemStorage itemStorage;
 
     public void validation(Integer userId, BookingDto bookingDto) {
-        User user = userStorage.findById(userId).
-                orElseThrow(NotFoundElementException::new);
-        Item item = itemStorage.findById(bookingDto.getId()).
-                orElseThrow(NotFoundElementException::new);
-        if(!item.getAvailable()) {
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item item = itemStorage.findById(bookingDto.getId())
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        if (!item.getAvailable()) {
             throw new ValidationElementException("Вещь недоступна");
         }
         validationDate(bookingDto);
@@ -36,9 +36,9 @@ public class BookingUtils {
     public void validationDate(BookingDto bookingDto) {
         Booking booking = BookingMapper.toBookingFromDto(bookingDto);
         LocalDateTime start = booking.getStart();
-        LocalDateTime end =booking.getEnd();
+        LocalDateTime end = booking.getEnd();
 
-        if (start == null ||end == null) {
+        if (start == null || end == null) {
             throw new ValidationElementException("Не указана дата аренды");
         }
 
@@ -52,18 +52,18 @@ public class BookingUtils {
     }
 
     // NotFoundElementException???
-    public void isOwner (Integer userId, Booking booking) {
-        if (!Objects.equals(itemStorage.getById(booking.getItemId()).getOwnerId(), userId)) {
+    public void isOwner(Integer userId, Booking booking) {
+        if (!Objects.equals(itemStorage.getById(booking.getItem().getId()).getOwner(), userId)) {
             throw new ValidationElementException("Пользователь не является владельцем вещи");
         }
     }
 
-    public void isUser (Integer userId) {
+    public void isUser(Integer userId) {
         User user = userStorage.findById(userId).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
-    public void isApprove (Booking booking, boolean approved) {
+    public void isApprove(Booking booking, boolean approved) {
         if ((approved && booking.getStatus().equals(StatusEnum.APPROVED))
                 || (approved && booking.getStatus().equals(StatusEnum.REJECTED))) {
             throw new ValidationElementException("У букинга уже выставлен данный статус");

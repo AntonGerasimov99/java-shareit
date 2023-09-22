@@ -8,7 +8,7 @@ import java.util.List;
 public interface ItemStorage extends JpaRepository<Item, Integer> {
 
     // ByDescriptionContainsIgnoreCase
-    List<Item> findAllByDescription(String text);
+    List<Item> findAllByDescriptionContainsIgnoreCase(String text);
 
     List<Item> findAllByOwnerId(Integer ownerId);
 }

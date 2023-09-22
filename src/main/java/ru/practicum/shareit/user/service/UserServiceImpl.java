@@ -32,22 +32,22 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserDto get(Integer userId) {
         return UserMapper.toUserDTO(userStorage.findById(userId).
-                orElseThrow(NotFoundElementException::new));
+                orElseThrow(() -> new NotFoundElementException("Пользователь не найден")));
     }
 
     @Override
     @Transactional
     public UserDto update(UserDto userDTO, Integer userId) {
         userDTO.setId(userId);
+        User oldUser = userStorage.findById(userDTO.getId()).
+                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        if (userDTO.getEmail() == null || userDTO.getEmail().isBlank()) {
+            userDTO.setEmail(oldUser.getEmail());
+        }
+        if (userDTO.getName() == null || userDTO.getName().isBlank()) {
+            userDTO.setName(oldUser.getName());
+        }
         User user = UserMapper.toUserFromDTO(userDTO);
-        User oldUser = userStorage.findById(user.getId()).
-                orElseThrow(NotFoundElementException::new);
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            user.setEmail(oldUser.getEmail());
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(oldUser.getName());
-        }
         user = userStorage.save(UserMapper.toUserFromDTO(userDTO));
         return UserMapper.toUserDTO(user);
     }

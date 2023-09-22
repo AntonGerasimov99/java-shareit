@@ -4,14 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.comment.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.User;
@@ -30,7 +28,7 @@ public class ItemUtils {
 
     public Item validateItemForUpdate(Item item) {
         Item oldItem = itemStorage.findById(item.getId()).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         if (item.getName() == null || item.getName().isBlank()) {
             item.setName(oldItem.getName());
         }
@@ -54,17 +52,17 @@ public class ItemUtils {
 
     public void isItem(Integer itemId) {
         itemStorage.findById(itemId).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
     }
 
     public void isUser(Integer userId) {
         userStorage.findById(userId).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
     public void isUserOwner(Integer userId, Integer itemId) {
-        if (!Objects.equals(itemStorage.getById(itemId).getOwnerId(), userId)) {
-            throw new NotFoundElementException();
+        if (!Objects.equals(itemStorage.getById(itemId).getOwner().getId(), userId)) {
+            throw new NotFoundElementException("Пользователь не является владельцем");
         }
     }
 
@@ -74,15 +72,15 @@ public class ItemUtils {
                 .filter(bookingDto -> bookingDto.getItemId()==itemId)
                 .filter(bookingDto -> bookingDto.getStatus().equals("APPROVED"));
         if (bookings.isEmpty()) {
-            throw new NotFoundElementException();
+            throw new NotFoundElementException("Список букингов пустой");
         }
     }
 
     public Comment createComment(Integer userId, Integer itemId, CommentDto commentDto) {
         Item item = itemStorage.findById(itemId).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         User author = userStorage.findById(userId).
-                orElseThrow(NotFoundElementException::new);
+                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
         Comment comment = CommentMapper.toCommentFromDTO(commentDto);
         comment.setItem(item);
         comment.setAuthor(author);

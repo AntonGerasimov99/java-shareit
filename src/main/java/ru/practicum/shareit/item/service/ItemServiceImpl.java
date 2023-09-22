@@ -16,6 +16,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemStorage itemStorage;
+    private final UserStorage userStorage;
     private final CommentStorage commentStorage;
     private final ItemUtils itemUtils;
     private final BookingService bookingService;
@@ -36,7 +39,9 @@ public class ItemServiceImpl implements ItemService {
         itemUtils.isUser(userId);
         itemUtils.checkItemValid(itemDto);
         itemDto.setOwner(userId);
-        Item item = ItemMapper.toItemFromDTO(itemDto);
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item item = ItemMapper.toItemFromDTO(itemDto, user);
         itemStorage.save(item);
         return get(item.getId());
     }
@@ -44,28 +49,48 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto get(Integer itemId) {
-        return ItemMapper.toItemDTO(itemStorage.findById(itemId).
-                orElseThrow(NotFoundElementException::new));
+        return ItemMapper.toItemDTO(itemStorage.findById(itemId)
+                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден")));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ItemDto getItem(Integer itemId, Integer userId) {
-        Item item = ItemMapper.toItemFromDTO(get(itemId));
-        ItemDto itemDto = get(itemId);
-        itemUtils.isUserOwner(userId, itemId);
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item item = itemStorage.findById(itemId)
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        ItemDto itemDto = ItemMapper.toItemDTO(item);
+        if (item.getOwner().getId().equals(userId)) {
+            updateBookings(itemDto);
+        }
         updateComments(itemDto);
-        return updateBookings(itemDto);
+        return itemDto;
     }
 
     @Override
     @Transactional
     public ItemDto update(ItemDto itemDto, Integer userId) {
-        itemUtils.isItem(itemDto.getId());
-        itemUtils.isUser(userId);
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item oldItem = itemStorage.findById(itemDto.getId())
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         itemUtils.isUserOwner(userId, itemDto.getId());
         itemDto.setOwner(userId);
-        Item item = ItemMapper.toItemFromDTO(itemDto);
+
+        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
+            itemDto.setName(oldItem.getName());
+        }
+        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
+            itemDto.setDescription(oldItem.getDescription());
+        }
+        if (itemDto.getAvailable() == null) {
+            itemDto.setAvailable(oldItem.getAvailable());
+        }
+        if (itemDto.getOwner() == null) {
+            itemDto.setOwner(oldItem.getOwner().getId());
+        }
+        Item item = ItemMapper.toItemFromDTO(itemDto, user);
         return ItemMapper.toItemDTO(itemStorage.save(item));
     }
 
@@ -86,7 +111,7 @@ public class ItemServiceImpl implements ItemService {
         if (text == null || text.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Item> items = itemStorage.findAllByDescription(text);
+        List<Item> items = itemStorage.findAllByDescriptionContainsIgnoreCase(text);
         return items.stream()
                 .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
@@ -107,7 +132,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemDto updateComments(ItemDto itemDto) {
-        List<Comment> comments = commentStorage.findAllByItemIdOrderByCreated(itemDto.getId());
+        List<Comment> comments = commentStorage.findAllByItemIdOrderByDate(itemDto.getId());
         itemDto.setComments(comments.stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList()));
@@ -115,17 +140,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemDto updateBookings(ItemDto itemDto) {
-        Booking lastBooking = BookingMapper.
-                toBookingFromDto(bookingService.getLastBooking(itemDto.getId()));
-        Booking nextBooking = BookingMapper.
-                toBookingFromDto(bookingService.getNextBooking(itemDto.getId()));
+        Booking lastBooking = bookingService.getLastBooking(itemDto.getId());
+        Booking nextBooking = bookingService.getNextBooking(itemDto.getId());
         itemDto.setLastBooking(lastBooking != null ? ItemDto.ListBooking.builder()
                 .id(lastBooking.getId())
-                .bookerId(lastBooking.getBooker())
+                .bookerId(lastBooking.getBooker().getId())
                 .build() :null);
         itemDto.setNextBooking(nextBooking != null ? ItemDto.ListBooking.builder()
                 .id(nextBooking.getId())
-                .bookerId(nextBooking.getBooker())
+                .bookerId(nextBooking.getBooker().getId())
                 .build() :null);
         return itemDto;
     }

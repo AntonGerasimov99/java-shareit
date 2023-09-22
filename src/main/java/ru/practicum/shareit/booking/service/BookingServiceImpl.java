@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
-import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,11 +65,11 @@ public class BookingServiceImpl implements BookingService {
                         userId, now, now);
                 break;
             case "PAST":
-                result = bookingRepository.findAllByBookerIdAndEndBeforeStartDesc
+                result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc
                         (userId, now);
                 break;
             case "FUTURE":
-                result = bookingRepository.findAllByBookerIdAndStartIsAfterDesc
+                result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc
                         (userId, now);
                 break;
             case "WAITING":
@@ -82,7 +81,7 @@ public class BookingServiceImpl implements BookingService {
                         (userId, StatusEnum.REJECTED);
                 break;
             default:
-                throw new NotFoundElementException();
+                throw new NotFoundElementException("Не найдено подходящего статуса");
 
         }
         return result.stream()
@@ -103,11 +102,11 @@ public class BookingServiceImpl implements BookingService {
                         (userId, now, now);
                 break;
             case "PAST":
-                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeStartDesc
+                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc
                         (userId, now);
                 break;
             case "FUTURE":
-                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterDesc
+                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc
                         (userId, now);
                 break;
             case "WAITING":
@@ -119,7 +118,7 @@ public class BookingServiceImpl implements BookingService {
                         (userId, StatusEnum.REJECTED);
                 break;
             default:
-                throw new NotFoundElementException();
+                throw new NotFoundElementException("Не найдено подходящего статуса");
 
         }
         return result.stream()
@@ -131,22 +130,22 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public Booking getByBookingId(Integer bookingId) {
         return bookingRepository.findById(bookingId)
-                .orElseThrow(NotFoundElementException::new);
+                .orElseThrow(() -> new NotFoundElementException("Букинг не найден"));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BookingDto getLastBooking(Integer itemId) {
+    public Booking getLastBooking(Integer itemId) {
         Booking booking = bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc
-                (itemId, LocalDateTime.now()).orElseThrow(NotFoundElementException::new);
-        return BookingMapper.toBookingDto(booking);
+                (itemId, LocalDateTime.now()).orElse(null);
+        return booking;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BookingDto getNextBooking(Integer itemId) {
+    public Booking getNextBooking(Integer itemId) {
         Booking booking = bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartDesc
-                (itemId, LocalDateTime.now(), StatusEnum.APPROVED).orElseThrow(NotFoundElementException::new);
-        return BookingMapper.toBookingDto(booking);
+                (itemId, LocalDateTime.now(), StatusEnum.APPROVED).orElse(null);
+        return booking;
     }
 }

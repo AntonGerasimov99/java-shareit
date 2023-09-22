@@ -4,6 +4,8 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import ru.practicum.shareit.booking.StatusEnum;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -26,11 +28,10 @@ public class Booking {
     @JoinColumn(name = "item_id", nullable = false)
     @ManyToOne(fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Integer itemId;
+    private Item item;
     @JoinColumn(name = "booker_id", nullable = false)
     @ManyToOne(fetch = FetchType.EAGER)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Integer booker;
+    private User booker;
     @Column(name = "status")
     private StatusEnum status;
 }

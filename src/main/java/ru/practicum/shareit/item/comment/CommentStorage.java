@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface CommentStorage extends JpaRepository<Comment, Integer> {
 
-    List<Comment> findAllByItemIdOrderByCreated(Integer itemId);
+    List<Comment> findAllByItemIdOrderByDate(Integer itemId);
 }
