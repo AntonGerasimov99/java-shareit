@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.item.model.Item;
@@ -21,20 +22,30 @@ public class BookingUtils {
 
     private final UserStorage userStorage;
     private final ItemStorage itemStorage;
+    private final BookingRepository bookingStorage;
 
-    public void validation(Integer userId, BookingDto bookingDto) {
+    public Booking validation(Integer userId, BookingDto bookingDto) {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
-        Item item = itemStorage.findById(bookingDto.getId())
+        Item item = itemStorage.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        if (Objects.equals(item.getOwner().getId(), userId)) {
+            throw new NotFoundElementException("Владелец не может забронировать вещь");
+        }
         if (!item.getAvailable()) {
             throw new ValidationElementException("Вещь недоступна");
         }
-        validationDate(bookingDto);
+
+        Booking booking = BookingMapper.toBookingFromDto(bookingDto);
+        booking.setStatus(StatusEnum.WAITING);
+        booking.setItem(item);
+        booking.setBooker(user);
+        validationDate(booking);
+        return booking;
     }
 
-    public void validationDate(BookingDto bookingDto) {
-        Booking booking = BookingMapper.toBookingFromDto(bookingDto);
+    public void validationDate(Booking booking) {
+        //Booking booking = BookingMapper.toBookingFromDto(bookingDto);
         LocalDateTime start = booking.getStart();
         LocalDateTime end = booking.getEnd();
 
@@ -49,12 +60,16 @@ public class BookingUtils {
         if (start.isBefore(LocalDateTime.now()) || end.isBefore(LocalDateTime.now())) {
             throw new ValidationElementException("Начало/конец аренды указан в прошлом");
         }
+        if (end.isBefore(start)) {
+            throw new ValidationElementException("Начало позже конца аренды");
+        }
     }
 
     // NotFoundElementException???
     public void isOwner(Integer userId, Booking booking) {
-        if (!Objects.equals(itemStorage.getById(booking.getItem().getId()).getOwner(), userId)) {
-            throw new ValidationElementException("Пользователь не является владельцем вещи");
+        if (!Objects.equals(itemStorage.getById(booking.getItem().getId()).getOwner().getId(), userId)
+                && !Objects.equals(booking.getBooker().getId(), userId)) {
+            throw new ValidationElementException("Пользователь не является владельцем вещи или букером");
         }
     }
 

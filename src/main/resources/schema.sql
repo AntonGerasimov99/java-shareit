@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS bookings
     date_end TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     item_id int REFERENCES items (id) ON DELETE CASCADE NOT NULL,
     booker_id int REFERENCES users (id) ON DELETE CASCADE NOT NULL,
-    status varchar(50) NOT NULL
+    status int NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments

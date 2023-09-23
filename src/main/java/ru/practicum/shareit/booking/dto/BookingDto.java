@@ -3,6 +3,8 @@ package ru.practicum.shareit.booking.dto;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.StatusEnum;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.FutureOrPresent;
@@ -18,6 +20,7 @@ public class BookingDto {
     @Future
     private LocalDateTime end;
     private Integer itemId;
-    private Integer booker;
+    private ItemDto item;
+    private UserDto booker;
     private StatusEnum status;
 }

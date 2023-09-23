@@ -26,9 +26,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto create(Integer userId, BookingDto bookingDto) {
-        bookingUtils.validation(userId, bookingDto);
-        Booking booking = BookingMapper.toBookingFromDto(bookingDto);
-        booking.setStatus(StatusEnum.WAITING);
+        Booking booking = bookingUtils.validation(userId, bookingDto);
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 

@@ -72,7 +72,7 @@ public class ItemUtils {
                 .filter(bookingDto -> bookingDto.getItemId()==itemId)
                 .filter(bookingDto -> bookingDto.getStatus().equals("APPROVED"));
         if (bookings.isEmpty()) {
-            throw new NotFoundElementException("Список букингов пустой");
+            throw new ValidationElementException("Список букингов пустой");
         }
     }
 
