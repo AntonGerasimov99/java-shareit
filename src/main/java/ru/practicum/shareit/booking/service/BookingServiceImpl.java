@@ -3,12 +3,12 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.BookingUtils;
-import ru.practicum.shareit.booking.StatusEnum;
+import ru.practicum.shareit.booking.utils.BookingUtils;
+import ru.practicum.shareit.booking.model.StatusEnum;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.storage.BookingRepository;
+import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.exceptions.UnknownStatusException;
 
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingRepository bookingRepository;
+    private final BookingStorage bookingRepository;
     private final BookingUtils bookingUtils;
 
     @Override
@@ -130,14 +130,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public Booking getLastBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc
-                (itemId, LocalDateTime.now()).orElse(null);
+        return bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc(itemId, LocalDateTime.now())
+                .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getNextBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc
-                (itemId, LocalDateTime.now(), StatusEnum.APPROVED).orElse(null);
+        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc(itemId, LocalDateTime.now(),
+                StatusEnum.APPROVED).orElse(null);
     }
 }

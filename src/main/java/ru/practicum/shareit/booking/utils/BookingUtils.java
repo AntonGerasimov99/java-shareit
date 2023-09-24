@@ -1,7 +1,8 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.booking.utils;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.model.StatusEnum;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -9,7 +10,7 @@ import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
@@ -76,8 +77,8 @@ public class BookingUtils {
     }
 
     public void isUser(Integer userId) {
-        User user = userStorage.findById(userId).
-                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        User user = userStorage.findById(userId)
+                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
     public void isApprove(Booking booking, boolean approved) {

@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserMapper;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 import ru.practicum.shareit.user.utils.UserUtils;
@@ -31,16 +31,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto get(Integer userId) {
-        return UserMapper.toUserDTO(userStorage.findById(userId).
-                orElseThrow(() -> new NotFoundElementException("Пользователь не найден")));
+        return UserMapper.toUserDTO(userStorage.findById(userId)
+                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден")));
     }
 
     @Override
     @Transactional
     public UserDto update(UserDto userDTO, Integer userId) {
         userDTO.setId(userId);
-        User oldUser = userStorage.findById(userDTO.getId()).
-                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        User oldUser = userStorage.findById(userDTO.getId())
+                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
         if (userDTO.getEmail() == null || userDTO.getEmail().isBlank()) {
             userDTO.setEmail(oldUser.getEmail());
         }
