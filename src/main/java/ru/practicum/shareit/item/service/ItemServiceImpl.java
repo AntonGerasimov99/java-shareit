@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
@@ -20,6 +19,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,7 +51,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public ItemDto get(Integer itemId) {
         return ItemMapper.toItemDTO(itemStorage.findById(itemId)
-                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден")));
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден")));
     }
 
     @Override
@@ -103,6 +103,7 @@ public class ItemServiceImpl implements ItemService {
                 .map(ItemMapper::toItemDTO)
                 .map(this::updateComments)
                 .map(this::updateBookings)
+                .sorted(Comparator.comparing(ItemDto::getId))
                 .collect(Collectors.toList());
     }
 
@@ -114,6 +115,7 @@ public class ItemServiceImpl implements ItemService {
         }
         List<Item> items = itemStorage.findAllByDescriptionContainsIgnoreCase(text);
         return items.stream()
+                .filter(Item::getAvailable)
                 .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
     }
@@ -127,7 +129,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto createComment(Integer userId, Integer itemId, CommentDto commentDto) {
-        itemUtils.isBooking(userId,itemId);
+        itemUtils.isBooking(userId, itemId);
         Comment comment = itemUtils.createComment(userId, itemId, commentDto);
         return CommentMapper.toCommentDto(commentStorage.save(comment));
     }
@@ -143,22 +145,14 @@ public class ItemServiceImpl implements ItemService {
     private ItemDto updateBookings(ItemDto itemDto) {
         Optional<Booking> lastBooking = Optional.ofNullable(bookingService.getLastBooking(itemDto.getId()));
         Optional<Booking> nextBooking = Optional.ofNullable(bookingService.getNextBooking(itemDto.getId()));
-        lastBooking.ifPresent(booking -> ItemDto.ListBooking.builder()
+        lastBooking.ifPresent(booking -> itemDto.setLastBooking(ItemDto.ListBooking.builder()
                 .id(booking.getId())
                 .bookerId(booking.getBooker().getId())
-                .build());
-        nextBooking.ifPresent(booking -> ItemDto.ListBooking.builder()
+                .build()));
+        nextBooking.ifPresent(booking -> itemDto.setNextBooking(ItemDto.ListBooking.builder()
                 .id(booking.getId())
                 .bookerId(booking.getBooker().getId())
-                .build());
-        /*itemDto.setLastBooking(lastBooking != null ? ItemDto.ListBooking.builder()
-                .id(lastBooking.getId())
-                .bookerId(lastBooking.getBooker().getId())
-                .build() :null);
-        itemDto.setNextBooking(nextBooking != null ? ItemDto.ListBooking.builder()
-                .id(nextBooking.getId())
-                .bookerId(nextBooking.getBooker().getId())
-                .build() :null);*/
+                .build()));
         return itemDto;
     }
 }

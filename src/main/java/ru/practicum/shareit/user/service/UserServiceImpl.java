@@ -47,8 +47,7 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getName() == null || userDTO.getName().isBlank()) {
             userDTO.setName(oldUser.getName());
         }
-        User user = UserMapper.toUserFromDTO(userDTO);
-        user = userStorage.save(UserMapper.toUserFromDTO(userDTO));
+        User user = userStorage.save(UserMapper.toUserFromDTO(userDTO));
         return UserMapper.toUserDTO(user);
     }
 

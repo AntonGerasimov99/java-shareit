@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.item.model.Item;
@@ -22,7 +21,6 @@ public class BookingUtils {
 
     private final UserStorage userStorage;
     private final ItemStorage itemStorage;
-    private final BookingRepository bookingStorage;
 
     public Booking validation(Integer userId, BookingDto bookingDto) {
         User user = userStorage.findById(userId)
@@ -45,7 +43,6 @@ public class BookingUtils {
     }
 
     public void validationDate(Booking booking) {
-        //Booking booking = BookingMapper.toBookingFromDto(bookingDto);
         LocalDateTime start = booking.getStart();
         LocalDateTime end = booking.getEnd();
 
@@ -65,11 +62,16 @@ public class BookingUtils {
         }
     }
 
-    // NotFoundElementException???
-    public void isOwner(Integer userId, Booking booking) {
+    public void isOwnerOrBooker(Integer userId, Booking booking) {
         if (!Objects.equals(itemStorage.getById(booking.getItem().getId()).getOwner().getId(), userId)
                 && !Objects.equals(booking.getBooker().getId(), userId)) {
-            throw new ValidationElementException("Пользователь не является владельцем вещи или букером");
+            throw new NotFoundElementException("Пользователь не является владельцем вещи или букером");
+        }
+    }
+
+    public void isOwner(Integer userId, Booking booking) {
+        if (!Objects.equals(itemStorage.getById(booking.getItem().getId()).getOwner().getId(), userId)) {
+            throw new NotFoundElementException("Пользователь не является владельцем вещи");
         }
     }
 

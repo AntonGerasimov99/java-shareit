@@ -18,6 +18,8 @@ public interface BookingService {
     List<BookingDto> findAllByBooker(Integer userId, String state);
 
     List<BookingDto> findAllByOwner(Integer userId, String state);
+
     Booking getLastBooking(Integer itemId);
+
     Booking getNextBooking(Integer itemId);
 }

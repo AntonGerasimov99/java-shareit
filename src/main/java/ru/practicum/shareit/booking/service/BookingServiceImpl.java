@@ -10,9 +10,9 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
+import ru.practicum.shareit.exceptions.UnknownStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +34,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public BookingDto get(Integer userId, Integer bookingId) {
         Booking booking = getByBookingId(bookingId);
-        bookingUtils.isOwner(userId, booking);
+        bookingUtils.isOwnerOrBooker(userId, booking);
         return BookingMapper.toBookingDto(booking);
     }
 
@@ -42,6 +42,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDto updateStatus(Integer userId, Integer bookingId, boolean approved) {
         Booking booking = getByBookingId(bookingId);
+        bookingUtils.isOwner(userId, booking);
         bookingUtils.isApprove(booking, approved);
         if (approved) {
             booking.setStatus(StatusEnum.APPROVED);
@@ -56,11 +57,14 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> findAllByBooker(Integer userId, String state) {
         bookingUtils.isUser(userId);
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> result = new ArrayList<>();
+        List<Booking> result;
         switch (state) {
             case "ALL":
-                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(
-                        userId, now, now);
+                result = bookingRepository.findAllByBookerIdOrderByStartDesc(userId);
+                break;
+            case "CURRENT":
+                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc
+                        (userId, now, now);
                 break;
             case "PAST":
                 result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc
@@ -79,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
                         (userId, StatusEnum.REJECTED);
                 break;
             default:
-                throw new NotFoundElementException("Не найдено подходящего статуса");
+                throw new UnknownStatusException("Unknown state: " + state);
 
         }
         return result.stream()
@@ -92,10 +96,12 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> findAllByOwner(Integer userId, String state) {
         bookingUtils.isUser(userId);
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> result = new ArrayList<>();
+        List<Booking> result;
         switch (state) {
-            // проверить ALL на метод
             case "ALL":
+                result = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
+                break;
+            case "CURRENT":
                 result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc
                         (userId, now, now);
                 break;
@@ -116,7 +122,7 @@ public class BookingServiceImpl implements BookingService {
                         (userId, StatusEnum.REJECTED);
                 break;
             default:
-                throw new NotFoundElementException("Не найдено подходящего статуса");
+                throw new UnknownStatusException("Unknown state: " + state);
 
         }
         return result.stream()

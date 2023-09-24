@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.StatusEnum;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,15 +70,19 @@ public class ItemUtils {
 
     public void isBooking(Integer userId, Integer itemId) {
         List<BookingDto> bookings = bookingService.findAllByBooker(userId, "ALL");
-        bookings.stream()
-                .filter(bookingDto -> bookingDto.getItemId()==itemId)
-                .filter(bookingDto -> bookingDto.getStatus().equals("APPROVED"));
-        if (bookings.isEmpty()) {
+        if (bookings.stream()
+                .filter(bookingDto -> Objects.equals(bookingDto.getItem().getId(), itemId))
+                .filter(bookingDto -> bookingDto.getStatus().equals(StatusEnum.APPROVED))
+                .filter(bookingDto -> bookingDto.getStart().isBefore(LocalDateTime.now()))
+                .count() == 0) {
             throw new ValidationElementException("Список букингов пустой");
         }
     }
 
     public Comment createComment(Integer userId, Integer itemId, CommentDto commentDto) {
+        if (commentDto.getText().isEmpty()) {
+            throw new ValidationElementException("Текст комментария пуст");
+        }
         Item item = itemStorage.findById(itemId).
                 orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         User author = userStorage.findById(userId).
@@ -84,6 +90,7 @@ public class ItemUtils {
         Comment comment = CommentMapper.toCommentFromDTO(commentDto);
         comment.setItem(item);
         comment.setAuthor(author);
+        comment.setDate(LocalDateTime.now());
         return comment;
     }
 }
