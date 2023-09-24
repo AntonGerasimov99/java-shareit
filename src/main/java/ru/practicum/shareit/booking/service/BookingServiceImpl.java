@@ -63,24 +63,19 @@ public class BookingServiceImpl implements BookingService {
                 result = bookingRepository.findAllByBookerIdOrderByStartDesc(userId);
                 break;
             case "CURRENT":
-                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc
-                        (userId, now, now);
+                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
                 break;
             case "PAST":
-                result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc
-                        (userId, now);
+                result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
                 break;
             case "FUTURE":
-                result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc
-                        (userId, now);
+                result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now);
                 break;
             case "WAITING":
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc
-                        (userId, StatusEnum.WAITING);
+                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
                 break;
             case "REJECTED":
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc
-                        (userId, StatusEnum.REJECTED);
+                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -102,24 +97,19 @@ public class BookingServiceImpl implements BookingService {
                 result = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
                 break;
             case "CURRENT":
-                result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc
-                        (userId, now, now);
+                result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
                 break;
             case "PAST":
-                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc
-                        (userId, now);
+                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
                 break;
             case "FUTURE":
-                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc
-                        (userId, now);
+                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now);
                 break;
             case "WAITING":
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc
-                        (userId, StatusEnum.WAITING);
+                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
                 break;
             case "REJECTED":
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc
-                        (userId, StatusEnum.REJECTED);
+                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -140,16 +130,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public Booking getLastBooking(Integer itemId) {
-        Booking booking = bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc
+        return bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc
                 (itemId, LocalDateTime.now()).orElse(null);
-        return booking;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getNextBooking(Integer itemId) {
-        Booking booking = bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc
+        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc
                 (itemId, LocalDateTime.now(), StatusEnum.APPROVED).orElse(null);
-        return booking;
     }
 }

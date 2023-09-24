@@ -29,8 +29,8 @@ public class ItemUtils {
     private final BookingService bookingService;
 
     public Item validateItemForUpdate(Item item) {
-        Item oldItem = itemStorage.findById(item.getId()).
-                orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        Item oldItem = itemStorage.findById(item.getId())
+                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         if (item.getName() == null || item.getName().isBlank()) {
             item.setName(oldItem.getName());
         }
@@ -53,13 +53,13 @@ public class ItemUtils {
     }
 
     public void isItem(Integer itemId) {
-        itemStorage.findById(itemId).
-                orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        itemStorage.findById(itemId)
+                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
     }
 
     public void isUser(Integer userId) {
-        userStorage.findById(userId).
-                orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        userStorage.findById(userId)
+                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
     public void isUserOwner(Integer userId, Integer itemId) {
