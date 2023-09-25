@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.utils.BookingUtils;
 import ru.practicum.shareit.booking.model.StatusEnum;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -56,25 +57,26 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<BookingDto> findAllByBooker(Integer userId, String state) {
         bookingUtils.isUser(userId);
+        State stateEnum = State.checkState(state);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> result;
-        switch (state) {
-            case "ALL":
+        switch (stateEnum) {
+            case ALL:
                 result = bookingRepository.findAllByBookerIdOrderByStartDesc(userId);
                 break;
-            case "CURRENT":
+            case CURRENT:
                 result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
                 break;
-            case "PAST":
+            case PAST:
                 result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now);
                 break;
-            case "WAITING":
+            case WAITING:
                 result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
                 break;
             default:
@@ -90,25 +92,26 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<BookingDto> findAllByOwner(Integer userId, String state) {
         bookingUtils.isUser(userId);
+        State stateEnum = State.checkState(state);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> result;
-        switch (state) {
-            case "ALL":
+        switch (stateEnum) {
+            case ALL:
                 result = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
                 break;
-            case "CURRENT":
+            case CURRENT:
                 result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
                 break;
-            case "PAST":
+            case PAST:
                 result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now);
                 break;
-            case "WAITING":
+            case WAITING:
                 result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
                 break;
             default:

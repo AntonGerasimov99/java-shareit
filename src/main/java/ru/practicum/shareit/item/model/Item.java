@@ -1,20 +1,18 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 
-@Data
 @Builder
 @Entity
 @RequiredArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Table(name = "items")
 public class Item {
 

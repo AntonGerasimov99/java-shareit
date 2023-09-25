@@ -1,9 +1,6 @@
 package ru.practicum.shareit.item.comment;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import ru.practicum.shareit.item.model.Item;
@@ -15,8 +12,9 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @AllArgsConstructor
+@Getter
+@Setter
 @RequiredArgsConstructor
-@Data
 @Table(name = "comments")
 public class Comment {
 

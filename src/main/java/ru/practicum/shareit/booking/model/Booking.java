@@ -9,11 +9,12 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
 @Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Table(name = "bookings")
 public class Booking {
 
