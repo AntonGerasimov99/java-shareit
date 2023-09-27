@@ -2,17 +2,26 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
-import ru.practicum.shareit.exceptions.ValidationElementException;
+import ru.practicum.shareit.item.utils.ItemUtils;
+import ru.practicum.shareit.item.comment.Comment;
+import ru.practicum.shareit.item.comment.CommentDto;
+import ru.practicum.shareit.item.comment.CommentMapper;
+import ru.practicum.shareit.item.comment.CommentStorage;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,82 +30,129 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemStorage itemStorage;
     private final UserStorage userStorage;
+    private final CommentStorage commentStorage;
+    private final ItemUtils itemUtils;
+    private final BookingService bookingService;
 
     @Override
+    @Transactional
     public ItemDto create(ItemDto itemDto, Integer userId) {
-        isUser(userId);
-        checkItemValid(itemDto);
+        itemUtils.isUser(userId);
+        itemUtils.checkItemValid(itemDto);
         itemDto.setOwner(userId);
-        Item item = ItemMapper.toItemFromDTO(itemDto);
-        itemStorage.create(item);
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item item = ItemMapper.toItemFromDTO(itemDto, user);
+        itemStorage.save(item);
         return get(item.getId());
     }
 
     @Override
+    @Transactional
     public ItemDto get(Integer itemId) {
-        return ItemMapper.toItemDTO(itemStorage.get(itemId));
+        return ItemMapper.toItemDTO(itemStorage.findById(itemId)
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден")));
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ItemDto getItem(Integer itemId, Integer userId) {
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item item = itemStorage.findById(itemId)
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        ItemDto itemDto = ItemMapper.toItemDTO(item);
+        if (item.getOwner().getId().equals(userId)) {
+            updateBookings(itemDto);
+        }
+        updateComments(itemDto);
+        return itemDto;
+    }
+
+    @Override
+    @Transactional
     public ItemDto update(ItemDto itemDto, Integer userId) {
-        isItem(itemDto.getId());
-        isUser(userId);
-        isUserOwner(userId, itemDto.getId());
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+        Item oldItem = itemStorage.findById(itemDto.getId())
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+        itemUtils.isUserOwner(userId, itemDto.getId());
         itemDto.setOwner(userId);
-        Item item = ItemMapper.toItemFromDTO(itemDto);
-        return ItemMapper.toItemDTO(itemStorage.update(item));
+
+        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
+            itemDto.setName(oldItem.getName());
+        }
+        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
+            itemDto.setDescription(oldItem.getDescription());
+        }
+        if (itemDto.getAvailable() == null) {
+            itemDto.setAvailable(oldItem.getAvailable());
+        }
+        if (itemDto.getOwner() == null) {
+            itemDto.setOwner(oldItem.getOwner().getId());
+        }
+        Item item = ItemMapper.toItemFromDTO(itemDto, user);
+        return ItemMapper.toItemDTO(itemStorage.save(item));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDto> getAllItemsByUserId(Integer userId) {
-        isUser(userId);
-        List<Item> items = itemStorage.getItemsByUserId(userId);
+        List<Item> items = itemStorage.findAllByOwnerId(userId);
         return items.stream()
                 .map(ItemMapper::toItemDTO)
+                .map(this::updateComments)
+                .map(this::updateBookings)
+                .sorted(Comparator.comparing(ItemDto::getId))
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDto> search(String text) {
         if (text == null || text.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Item> items = itemStorage.search(text);
+        List<Item> items = itemStorage.findAllByDescriptionContainsIgnoreCase(text);
         return items.stream()
+                .filter(Item::getAvailable)
                 .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteItem(Integer itemId) {
-        isItem(itemId);
-        itemStorage.deleteItem(itemId);
+        itemUtils.isItem(itemId);
+        itemStorage.deleteById(itemId);
     }
 
-    private void isItem(Integer itemId) {
-        if (itemId == null || !itemStorage.isItem(itemId)) {
-            throw new NotFoundElementException();
-        }
+    @Override
+    @Transactional
+    public CommentDto createComment(Integer userId, Integer itemId, CommentDto commentDto) {
+        itemUtils.isBooking(userId, itemId);
+        Comment comment = itemUtils.createComment(userId, itemId, commentDto);
+        return CommentMapper.toCommentDto(commentStorage.save(comment));
     }
 
-    private void checkItemValid(ItemDto itemDto) {
-        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new ValidationElementException("Имя отсутствует");
-        }
-        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new ValidationElementException("Описание отсутствует");
-        }
+    private ItemDto updateComments(ItemDto itemDto) {
+        List<Comment> comments = commentStorage.findAllByItemIdOrderByDate(itemDto.getId());
+        itemDto.setComments(comments.stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList()));
+        return itemDto;
     }
 
-    private void isUser(Integer userId) {
-        if (userId == null || !userStorage.isUser(userId)) {
-            throw new NotFoundElementException();
-        }
-    }
-
-    private void isUserOwner(Integer userId, Integer itemId) {
-        if (!Objects.equals(itemStorage.get(itemId).getOwner(), userId)) {
-            throw new NotFoundElementException();
-        }
+    private ItemDto updateBookings(ItemDto itemDto) {
+        Optional<Booking> lastBooking = Optional.ofNullable(bookingService.getLastBooking(itemDto.getId()));
+        Optional<Booking> nextBooking = Optional.ofNullable(bookingService.getNextBooking(itemDto.getId()));
+        lastBooking.ifPresent(booking -> itemDto.setLastBooking(ItemDto.ListBooking.builder()
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .build()));
+        nextBooking.ifPresent(booking -> itemDto.setNextBooking(ItemDto.ListBooking.builder()
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .build()));
+        return itemDto;
     }
 }
