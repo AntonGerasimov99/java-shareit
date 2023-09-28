@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
@@ -15,6 +16,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
@@ -33,6 +36,7 @@ public class ItemServiceImpl implements ItemService {
     private final CommentStorage commentStorage;
     private final ItemUtils itemUtils;
     private final BookingService bookingService;
+    private final ItemRequestStorage itemRequestStorage;
 
     @Override
     @Transactional
@@ -43,6 +47,12 @@ public class ItemServiceImpl implements ItemService {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
         Item item = ItemMapper.toItemFromDTO(itemDto, user);
+        if (itemDto.getRequestId() != null) {
+            ItemRequest itemRequest = itemRequestStorage.findById(itemDto.getRequestId()).orElseThrow();
+            item.setRequest(itemRequest);
+            itemStorage.save(item);
+            return get(item.getId());
+        }
         itemStorage.save(item);
         return get(item.getId());
     }
@@ -97,8 +107,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDto> getAllItemsByUserId(Integer userId) {
-        List<Item> items = itemStorage.findAllByOwnerId(userId);
+    public List<ItemDto> getAllItemsByUserId(Integer userId, Integer from, Integer size) {
+        List<Item> items = itemStorage.findAllByOwnerId(userId, PageRequest.of(from / size, size));
         return items.stream()
                 .map(ItemMapper::toItemDTO)
                 .map(this::updateComments)
@@ -109,11 +119,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDto> search(String text) {
+    public List<ItemDto> search(String text, Integer from, Integer size) {
         if (text == null || text.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Item> items = itemStorage.findAllByDescriptionContainsIgnoreCase(text);
+        List<Item> items = itemStorage.findAllByDescriptionContainsIgnoreCase(text, PageRequest.of(from / size, size));
         return items.stream()
                 .filter(Item::getAvailable)
                 .map(ItemMapper::toItemDTO)

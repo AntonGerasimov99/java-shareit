@@ -69,7 +69,7 @@ public class ItemUtils {
     }
 
     public void isBooking(Integer userId, Integer itemId) {
-        List<BookingDto> bookings = bookingService.findAllByBooker(userId, "ALL");
+        List<BookingDto> bookings = bookingService.findAllByBooker(userId, "ALL", 0 , 10);
         if (bookings.stream()
                 .filter(bookingDto -> Objects.equals(bookingDto.getItem().getId(), itemId))
                 .filter(bookingDto -> bookingDto.getStatus().equals(StatusEnum.APPROVED))

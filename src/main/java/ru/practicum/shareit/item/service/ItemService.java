@@ -13,11 +13,11 @@ public interface ItemService {
 
     ItemDto update(ItemDto itemDto, Integer userId);
 
-    List<ItemDto> getAllItemsByUserId(Integer userId);
+    List<ItemDto> getAllItemsByUserId(Integer userId, Integer from, Integer size);
 
     ItemDto getItem(Integer itemId, Integer userId);
 
-    List<ItemDto> search(String text);
+    List<ItemDto> search(String text, Integer from, Integer size);
 
     void deleteItem(Integer itemId);
 

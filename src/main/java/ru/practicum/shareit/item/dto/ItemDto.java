@@ -20,7 +20,7 @@ public class ItemDto {
     @NotNull
     private Boolean available;
     private Integer owner;
-    private Integer request;
+    private Integer requestId;
     private ListBooking lastBooking;
     private ListBooking nextBooking;
     private List<CommentDto> comments;
