@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,14 +23,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingStorage bookingRepository;
+    private final BookingStorage bookingStorage;
     private final BookingUtils bookingUtils;
 
     @Override
     @Transactional
     public BookingDto create(Integer userId, BookingDto bookingDto) {
         Booking booking = bookingUtils.validation(userId, bookingDto);
-        return BookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingStorage.save(booking));
     }
 
     @Override
@@ -53,7 +52,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(StatusEnum.REJECTED);
         }
-        return BookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingStorage.save(booking));
     }
 
     @Override
@@ -66,22 +65,22 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> result;
         switch (stateEnum) {
             case ALL:
-                result = bookingRepository.findAllByBookerIdOrderByStartDesc(userId, pageable);
+                result = bookingStorage.findAllByBookerIdOrderByStartDesc(userId, pageable);
                 break;
             case CURRENT:
-                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
+                result = bookingStorage.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
                 break;
             case PAST:
-                result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
+                result = bookingStorage.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
                 break;
             case FUTURE:
-                result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
+                result = bookingStorage.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
                 break;
             case WAITING:
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
+                result = bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
                 break;
             case REJECTED:
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
+                result = bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -102,22 +101,22 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> result;
         switch (stateEnum) {
             case ALL:
-                result = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId, pageable);
+                result = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(userId, pageable);
                 break;
             case CURRENT:
-                result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
+                result = bookingStorage.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
                 break;
             case PAST:
-                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
+                result = bookingStorage.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
                 break;
             case FUTURE:
-                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
+                result = bookingStorage.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
                 break;
             case WAITING:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
+                result = bookingStorage.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
                 break;
             case REJECTED:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
+                result = bookingStorage.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -131,21 +130,21 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public Booking getByBookingId(Integer bookingId) {
-        return bookingRepository.findById(bookingId)
+        return bookingStorage.findById(bookingId)
                 .orElseThrow(() -> new NotFoundElementException("Букинг не найден"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getLastBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc(itemId, LocalDateTime.now())
+        return bookingStorage.findFirstByItemIdAndStartIsBeforeOrderByStartDesc(itemId, LocalDateTime.now())
                 .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getNextBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc(itemId, LocalDateTime.now(),
+        return bookingStorage.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc(itemId, LocalDateTime.now(),
                 StatusEnum.APPROVED).orElse(null);
     }
 }
