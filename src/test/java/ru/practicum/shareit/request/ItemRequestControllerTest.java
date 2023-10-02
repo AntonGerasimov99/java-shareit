@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ItemRequestControllerTest {
 
-    private final String HEADER = "X-Sharer-User-Id";
+    private final String header = "X-Sharer-User-Id";
     @MockBean
     private ItemRequestService service;
     @Autowired
@@ -89,7 +89,7 @@ public class ItemRequestControllerTest {
         Mockito.when(service.create(itemRequestDto, user.getId())).thenReturn(itemRequestDto);
 
         mockMvc.perform(post("/requests")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemRequestDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ public class ItemRequestControllerTest {
         Mockito.when(service.findAllByUserId(user.getId())).thenReturn(List.of(itemRequestDto));
 
         mockMvc.perform(get("/requests")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemRequestDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,7 +129,7 @@ public class ItemRequestControllerTest {
         Mockito.when(service.findByUserIdAndRequestId(user.getId(), itemRequestDto.getId())).thenReturn(itemRequestDto);
 
         mockMvc.perform(get("/requests/{requestId}", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemRequestDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +149,7 @@ public class ItemRequestControllerTest {
         Mockito.when(service.findAllPageableByUserId(user.getId(), 1, 1)).thenReturn(List.of(itemRequestDto));
 
         mockMvc.perform(get("/requests/all")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .param("from", "1")
                         .param("size", "1")
                         .content(mapper.writeValueAsString(itemRequestDto))

@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @AutoConfigureMockMvc
 public class BookingControllerTest {
 
-    private final String HEADER = "X-Sharer-User-Id";
+    private final String header = "X-Sharer-User-Id";
     @MockBean
     private BookingService bookingService;
     @Autowired
@@ -66,7 +66,7 @@ public class BookingControllerTest {
         Mockito.when(bookingService.create(bookingDto.getId(), bookingDto)).thenReturn(bookingDto);
 
         mockMvc.perform(post("/bookings")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(bookingDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +86,7 @@ public class BookingControllerTest {
         Mockito.when(bookingService.get(1, bookingDto.getId())).thenReturn(bookingDto);
 
         mockMvc.perform(get("/bookings/{bookingId}", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -105,7 +105,7 @@ public class BookingControllerTest {
         bookingDto.setStatus(StatusEnum.APPROVED);
 
         mockMvc.perform(patch("/bookings/{bookingId}", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .param("approved", "true")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .accept(MediaType.APPLICATION_JSON))
@@ -122,7 +122,7 @@ public class BookingControllerTest {
         bookingDto.setStatus(StatusEnum.REJECTED);
 
         mockMvc.perform(patch("/bookings/{bookingId}", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .param("approved", "false")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .accept(MediaType.APPLICATION_JSON))
@@ -141,7 +141,7 @@ public class BookingControllerTest {
         Mockito.when(bookingService.findAllByBooker(1, "ALL", 1, 1)).thenReturn(List.of(bookingDto));
 
         mockMvc.perform(get("/bookings", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .param("state", "ALL")
                         .param("from", "1")
                         .param("size", "1")
@@ -162,7 +162,7 @@ public class BookingControllerTest {
         Mockito.when(bookingService.findAllByOwner(2, "ALL", 1, 1)).thenReturn(List.of(bookingDto));
 
         mockMvc.perform(get("/bookings/owner", 1)
-                        .header(HEADER, 2)
+                        .header(header, 2)
                         .param("state", "ALL")
                         .param("from", "1")
                         .param("size", "1")

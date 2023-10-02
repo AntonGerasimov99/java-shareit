@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ItemControllerTest {
 
-    private final String HEADER = "X-Sharer-User-Id";
+    private final String header = "X-Sharer-User-Id";
     @MockBean
     private ItemService service;
     @Autowired
@@ -68,7 +68,7 @@ public class ItemControllerTest {
         Mockito.when(service.create(itemDto, user.getId())).thenReturn(itemDto);
 
         mockMvc.perform(post("/items")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +87,7 @@ public class ItemControllerTest {
         Mockito.when(service.getItem(itemDto.getId(), user.getId())).thenReturn(itemDto);
 
         mockMvc.perform(get("/items/{itemId}", itemDto.getId())
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +106,7 @@ public class ItemControllerTest {
         Mockito.when(service.update(itemDto, user.getId())).thenReturn(itemDto);
 
         mockMvc.perform(patch("/items/{itemId}", itemDto.getId())
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +125,7 @@ public class ItemControllerTest {
         Mockito.when(service.getAllItemsByUserId(user.getId(), 1, 1)).thenReturn(List.of(itemDto));
 
         mockMvc.perform(get("/items")
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .param("from", "1")
                         .param("size", "1")
                         .content(mapper.writeValueAsString(itemDto))
@@ -173,7 +173,7 @@ public class ItemControllerTest {
         Mockito.when(service.createComment(user.getId(), itemDto.getId(), commentDto)).thenReturn(commentDto);
 
         mockMvc.perform(post("/items/{itemId}/comment", 1)
-                        .header(HEADER, 1)
+                        .header(header, 1)
                         .content(mapper.writeValueAsString(commentDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
