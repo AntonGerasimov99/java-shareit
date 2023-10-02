@@ -34,18 +34,11 @@ public class ItemRequestUtils {
                 .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
-    /*public List<ItemDto> findItemsForRequest(Integer requestId) {
-        return itemStorage.findAllByRequestId(requestId).stream()
-                .map(ItemMapper::toItemDTO)
-                .collect(Collectors.toList());
-    }*/
-
     public ItemRequestDto addItemsAndConvertToDto(ItemRequest itemRequest) {
         List<Item> items = itemStorage.findAllByRequestId(itemRequest.getId());
         List<ItemDto> result = items.stream()
                 .map(ItemMapper::toItemDTO)
                 .collect(Collectors.toList());
-        //Добавить проверку на нул?
         return ItemRequestMapper.toItemRequestDto(itemRequest, result);
     }
 }
