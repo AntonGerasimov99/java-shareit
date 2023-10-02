@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.equalTo;
 
 @ExtendWith(MockitoExtension.class)
