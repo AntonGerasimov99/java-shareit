@@ -19,7 +19,5 @@ public interface ItemService {
 
     List<ItemDto> search(String text, Integer from, Integer size);
 
-    void deleteItem(Integer itemId);
-
     CommentDto createComment(Integer userId, Integer itemId, CommentDto commentDto);
 }

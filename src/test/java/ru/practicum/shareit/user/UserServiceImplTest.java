@@ -101,4 +101,9 @@ public class UserServiceImplTest {
         List<UserDto> result = userService.getAllUsers();
         assertThat(2, equalTo(result.size()));
     }
+
+    @Test
+    void shouldDeleteUser() {
+        userService.deleteUser(1);
+    }
 }

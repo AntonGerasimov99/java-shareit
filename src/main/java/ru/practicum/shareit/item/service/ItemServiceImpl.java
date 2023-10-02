@@ -131,12 +131,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public void deleteItem(Integer itemId) {
-        itemUtils.isItem(itemId);
-        itemStorage.deleteById(itemId);
-    }
-
-    @Override
     @Transactional
     public CommentDto createComment(Integer userId, Integer itemId, CommentDto commentDto) {
         itemUtils.isBooking(userId, itemId);

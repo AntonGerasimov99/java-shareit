@@ -129,4 +129,12 @@ public class UserControllerTest {
 
         verify(service, times(1)).getAllUsers();
     }
+
+    @Test
+    void shouldDelete() throws Exception {
+        mockMvc.perform(delete("/users/{userId}", 1))
+                .andExpect(status().isOk());
+
+        verify(service, times(1)).deleteUser(1);
+    }
 }

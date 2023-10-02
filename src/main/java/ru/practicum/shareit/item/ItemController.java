@@ -56,11 +56,6 @@ public class ItemController {
         return itemService.search(text, from, size);
     }
 
-    @DeleteMapping
-    public void deleteItem(@PathVariable("itemId") Integer itemId) {
-        itemService.deleteItem(itemId);
-    }
-
     @PostMapping("/{itemId}/comment")
     public CommentDto createComment(@RequestHeader("X-Sharer-User-Id") Integer userId,
                                     @PathVariable(value = "itemId") Integer itemId,
