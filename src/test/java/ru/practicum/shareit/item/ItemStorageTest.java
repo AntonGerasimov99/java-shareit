@@ -88,4 +88,11 @@ public class ItemStorageTest {
         assertThat(item.getDescription(), equalTo(result.get(0).getDescription()));
         assertThat(item.getAvailable(), equalTo(result.get(0).getAvailable()));
     }
+
+    @Test
+    void shouldFindAllByRequestId() {
+        List<Item> result = itemStorage.findAllByRequestId(1);
+
+        assertThat(result.size(), equalTo(0));
+    }
 }
