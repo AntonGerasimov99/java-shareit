@@ -8,8 +8,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
+import ru.practicum.shareit.item.comment.Comment;
+import ru.practicum.shareit.item.comment.CommentDto;
+import ru.practicum.shareit.item.comment.CommentMapper;
 import ru.practicum.shareit.item.comment.CommentStorage;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -21,6 +25,8 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -150,5 +156,119 @@ public class ItemServiceImplTest {
 
         Assertions.assertThrows(NotFoundElementException.class, () -> itemService.getItem(itemDto.getId(), 15));
         Assertions.assertThrows(NotFoundElementException.class, () -> itemService.getItem(15, user.getId()));
+    }
+
+    @Test
+    void shouldGetAllItemsByUserId() {
+        User user2 = User.builder()
+                .id(1)
+                .name("name2")
+                .email("new2@mail.ru")
+                .build();
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("text")
+                .item(item)
+                .author(user2)
+                .date(LocalDateTime.now())
+                .build();
+
+        Mockito.when(itemStorage.findAllByOwnerId(user.getId(), PageRequest.of(1 / 1, 1))).thenReturn(List.of(item));
+        Mockito.when(commentStorage.findAllByItemIdOrderByDate(itemDto.getId())).thenReturn(List.of(comment));
+        Mockito.when(bookingService.getLastBooking(itemDto.getId())).thenReturn(null);
+        Mockito.when(bookingService.getNextBooking(itemDto.getId())).thenReturn(null);
+
+        List<ItemDto> result = itemService.getAllItemsByUserId(user.getId(), 1, 1);
+
+        assertThat(itemDto.getId(), equalTo(result.get(0).getId()));
+        assertThat(itemDto.getName(), equalTo(result.get(0).getName()));
+        assertThat(itemDto.getDescription(), equalTo(result.get(0).getDescription()));
+        assertThat(itemDto.getAvailable(), equalTo(result.get(0).getAvailable()));
+
+        Mockito.verify(itemStorage, times(1)).findAllByOwnerId(user.getId(), PageRequest.of(1 / 1, 1));
+    }
+
+    @Test
+    void shouldSearch() {
+        Mockito.when(itemStorage.findAllByDescriptionContainsIgnoreCase("any", PageRequest.of(1 / 1, 1)))
+                .thenReturn(List.of(item));
+
+        List<ItemDto> result = itemService.search("any", 1, 1);
+
+        assertThat(itemDto.getId(), equalTo(result.get(0).getId()));
+        assertThat(itemDto.getName(), equalTo(result.get(0).getName()));
+        assertThat(itemDto.getDescription(), equalTo(result.get(0).getDescription()));
+        assertThat(itemDto.getAvailable(), equalTo(result.get(0).getAvailable()));
+
+        Mockito.verify(itemStorage, times(1)).findAllByDescriptionContainsIgnoreCase("any",
+                PageRequest.of(1 / 1, 1));
+    }
+
+    @Test
+    void shouldNotSearchWithEmptyText() {
+        List<ItemDto> result = itemService.search(null, 1, 1);
+
+        assertThat(result.size(), equalTo(0));
+    }
+
+    @Test
+    void shouldCreateComment() {
+        User user2 = User.builder()
+                .id(1)
+                .name("name2")
+                .email("new2@mail.ru")
+                .build();
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("text")
+                .item(item)
+                .author(user2)
+                .date(LocalDateTime.now())
+                .build();
+
+        CommentDto check = CommentMapper.toCommentDto(comment);
+
+        Mockito.when(itemUtils.createComment(user2.getId(), item.getId(), CommentMapper.toCommentDto(comment)))
+                .thenReturn(comment);
+        Mockito.when(commentStorage.save(any(Comment.class))).thenReturn(comment);
+
+        CommentDto result = itemService.createComment(user2.getId(), item.getId(), CommentMapper.toCommentDto(comment));
+
+        assertThat(check.getId(), equalTo(result.getId()));
+        assertThat(check.getText(), equalTo(result.getText()));
+        assertThat(check.getItem(), equalTo(result.getItem()));
+        assertThat(check.getAuthorName(), equalTo(result.getAuthorName()));
+    }
+
+    @Test
+    void shouldUpdateComment() {
+        User user2 = User.builder()
+                .id(1)
+                .name("name2")
+                .email("new2@mail.ru")
+                .build();
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("text")
+                .item(item)
+                .author(user2)
+                .date(LocalDateTime.now())
+                .build();
+
+        CommentDto check = CommentMapper.toCommentDto(comment);
+
+        Mockito.when(itemUtils.createComment(user2.getId(), item.getId(), CommentMapper.toCommentDto(comment)))
+                .thenReturn(comment);
+        Mockito.when(commentStorage.save(any(Comment.class))).thenReturn(comment);
+
+        CommentDto result = itemService.createComment(user2.getId(), item.getId(), CommentMapper.toCommentDto(comment));
+
+        assertThat(check.getId(), equalTo(result.getId()));
+        assertThat(check.getText(), equalTo(result.getText()));
+        assertThat(check.getItem(), equalTo(result.getItem()));
+        assertThat(check.getAuthorName(), equalTo(result.getAuthorName()));
     }
 }

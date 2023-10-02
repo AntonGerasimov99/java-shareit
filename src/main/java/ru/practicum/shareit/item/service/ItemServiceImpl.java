@@ -144,7 +144,7 @@ public class ItemServiceImpl implements ItemService {
         return CommentMapper.toCommentDto(commentStorage.save(comment));
     }
 
-    private ItemDto updateComments(ItemDto itemDto) {
+    public ItemDto updateComments(ItemDto itemDto) {
         List<Comment> comments = commentStorage.findAllByItemIdOrderByDate(itemDto.getId());
         itemDto.setComments(comments.stream()
                 .map(CommentMapper::toCommentDto)
@@ -152,7 +152,7 @@ public class ItemServiceImpl implements ItemService {
         return itemDto;
     }
 
-    private ItemDto updateBookings(ItemDto itemDto) {
+    public ItemDto updateBookings(ItemDto itemDto) {
         Optional<Booking> lastBooking = Optional.ofNullable(bookingService.getLastBooking(itemDto.getId()));
         Optional<Booking> nextBooking = Optional.ofNullable(bookingService.getNextBooking(itemDto.getId()));
         lastBooking.ifPresent(booking -> itemDto.setLastBooking(ItemDto.ListBooking.builder()
