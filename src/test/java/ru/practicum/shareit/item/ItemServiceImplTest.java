@@ -9,6 +9,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.StatusEnum;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.item.comment.Comment;
@@ -16,6 +18,7 @@ import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.comment.CommentMapper;
 import ru.practicum.shareit.item.comment.CommentStorage;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.item.storage.ItemStorage;
@@ -270,5 +273,33 @@ public class ItemServiceImplTest {
         assertThat(check.getText(), equalTo(result.getText()));
         assertThat(check.getItem(), equalTo(result.getItem()));
         assertThat(check.getAuthorName(), equalTo(result.getAuthorName()));
+    }
+
+    @Test
+    void shouldUpdateBookings() {
+        User firstOwner = User.builder().id(1).name("firstOwner").email("firstOwner@mail.ru").build();
+        User firstBooker = User.builder().id(3).name("firstBooker").email("firstBooker@mail.ru").build();
+        User secondBooker = User.builder().id(4).name("secondBooker").email("secondBooker@mail.ru").build();
+        Item firstItem = Item.builder().id(1).name("firstItem").description("firstItem description").available(true)
+                .owner(firstOwner).build();
+
+        LocalDateTime start = LocalDateTime.now().minusDays(5);
+        LocalDateTime end = LocalDateTime.now().minusDays(4);
+        ItemDto firstItemDto = ItemMapper.toItemDTO(firstItem);
+
+        Booking firstBooking = Booking.builder().id(1).start(start).end(end).item(firstItem).booker(firstBooker)
+                .status(StatusEnum.CANCELED).build();
+        Booking secondBooking = Booking.builder().id(2).start(start.plusDays(6)).end(end.plusDays(8)).item(firstItem).booker(secondBooker)
+                .status(StatusEnum.WAITING).build();
+
+        Mockito.when(bookingService.getLastBooking(firstItem.getId())).thenReturn(firstBooking);
+        Mockito.when(bookingService.getNextBooking(firstItem.getId())).thenReturn(secondBooking);
+
+        ItemDto result = itemService.updateBookings(firstItemDto);
+
+        assertThat(result.getLastBooking().getId(), equalTo(firstBooking.getId()));
+        assertThat(result.getLastBooking().getBookerId(), equalTo(firstBooking.getBooker().getId()));
+        assertThat(result.getLastBooking().getId(), equalTo(firstBooking.getId()));
+        assertThat(result.getNextBooking().getBookerId(), equalTo(secondBooking.getBooker().getId()));
     }
 }
