@@ -36,13 +36,11 @@ public class CommentStorageTest {
     @BeforeEach
     void beforeEach() {
         user = User.builder()
-                .id(1)
                 .name("name")
                 .email("new@mail.ru")
                 .build();
 
         item = Item.builder()
-                .id(1)
                 .name("itemName")
                 .description("itemDescription")
                 .available(true)
@@ -50,23 +48,21 @@ public class CommentStorageTest {
                 .build();
 
         user2 = User.builder()
-                .id(1)
                 .name("name2")
                 .email("new2@mail.ru")
                 .build();
 
         comment = Comment.builder()
-                .id(1)
                 .text("text")
                 .item(item)
                 .author(user2)
                 .date(LocalDateTime.now())
                 .build();
 
-        userStorage.save(user);
-        userStorage.save(user2);
-        itemStorage.save(item);
-        commentStorage.save(comment);
+        user = userStorage.save(user);
+        user2 = userStorage.save(user2);
+        item = itemStorage.save(item);
+        comment = commentStorage.save(comment);
     }
 
     @Test

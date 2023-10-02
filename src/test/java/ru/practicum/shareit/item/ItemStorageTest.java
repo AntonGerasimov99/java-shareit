@@ -26,6 +26,7 @@ public class ItemStorageTest {
     @Autowired
     private UserStorage userStorage;
     private Item item;
+    private Item item2;
     private User user;
     private User user2;
     private ItemRequest itemRequest;
@@ -33,19 +34,23 @@ public class ItemStorageTest {
     @BeforeEach
     void beforeEach() {
         user = User.builder()
-                .id(1)
                 .name("UserName")
                 .email("new@mail.ru")
                 .build();
 
         user2 = User.builder()
-                .id(2)
                 .name("UserName2")
                 .email("new2@mail.ru")
                 .build();
 
         item = Item.builder()
-                .id(1)
+                .name("name")
+                .description("description")
+                .available(true)
+                .owner(user2)
+                .build();
+
+        item2 = Item.builder()
                 .name("name")
                 .description("description one")
                 .available(true)
@@ -58,9 +63,10 @@ public class ItemStorageTest {
                 .created(LocalDateTime.now())
                 .build();
 
-        userStorage.save(user);
-        userStorage.save(user2);
-        itemStorage.save(item);
+        user = userStorage.save(user);
+        user2 = userStorage.save(user2);
+        item = itemStorage.save(item);
+        item2 = itemStorage.save(item2);
     }
 
     @Test
@@ -68,9 +74,9 @@ public class ItemStorageTest {
         List<Item> result = itemStorage.findAllByDescriptionContainsIgnoreCase("one", Pageable.unpaged());
 
         Assertions.assertNotNull(result);
-        assertThat(item.getId(), equalTo(result.get(0).getId()));
-        assertThat(item.getDescription(), equalTo(result.get(0).getDescription()));
-        assertThat(item.getAvailable(), equalTo(result.get(0).getAvailable()));
+        assertThat(item2.getId(), equalTo(result.get(0).getId()));
+        assertThat(item2.getDescription(), equalTo(result.get(0).getDescription()));
+        assertThat(item2.getAvailable(), equalTo(result.get(0).getAvailable()));
     }
 
     @Test
