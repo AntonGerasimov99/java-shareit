@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.practicum.shareit.exceptions.ValidationElementException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.utils.UserUtils;

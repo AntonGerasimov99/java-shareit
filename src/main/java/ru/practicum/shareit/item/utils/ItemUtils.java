@@ -30,7 +30,7 @@ public class ItemUtils {
 
     public Item validateItemForUpdate(Item item) {
         Item oldItem = itemStorage.findById(item.getId())
-                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         if (item.getName() == null || item.getName().isBlank()) {
             item.setName(oldItem.getName());
         }
@@ -54,12 +54,12 @@ public class ItemUtils {
 
     public void isItem(Integer itemId) {
         itemStorage.findById(itemId)
-                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
     }
 
     public void isUser(Integer userId) {
         userStorage.findById(userId)
-                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
     }
 
     public void isUserOwner(Integer userId, Integer itemId) {
@@ -69,7 +69,7 @@ public class ItemUtils {
     }
 
     public void isBooking(Integer userId, Integer itemId) {
-        List<BookingDto> bookings = bookingService.findAllByBooker(userId, "ALL", 0 , 10);
+        List<BookingDto> bookings = bookingService.findAllByBooker(userId, "ALL", 0, 10);
         if (bookings.stream()
                 .filter(bookingDto -> Objects.equals(bookingDto.getItem().getId(), itemId))
                 .filter(bookingDto -> bookingDto.getStatus().equals(StatusEnum.APPROVED))
@@ -84,9 +84,9 @@ public class ItemUtils {
             throw new ValidationElementException("Текст комментария пуст");
         }
         Item item = itemStorage.findById(itemId)
-                        .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
+                .orElseThrow(() -> new NotFoundElementException("Предмет не найден"));
         User author = userStorage.findById(userId)
-                        .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
+                .orElseThrow(() -> new NotFoundElementException("Пользователь не найден"));
         Comment comment = CommentMapper.toCommentFromDTO(commentDto);
         comment.setItem(item);
         comment.setAuthor(author);

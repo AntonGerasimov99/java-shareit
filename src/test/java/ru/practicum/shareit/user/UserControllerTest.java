@@ -73,7 +73,7 @@ public class UserControllerTest {
     void shouldGetUser() throws Exception {
         Mockito.when(service.get(userDto.getId())).thenReturn(userDto);
 
-        mockMvc.perform(get("/users/{userId}")
+        mockMvc.perform(get("/users/{userId}", 1)
                         .content(mapper.writeValueAsString(userDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
