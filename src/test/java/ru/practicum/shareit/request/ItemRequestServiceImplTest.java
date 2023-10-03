@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import ru.practicum.shareit.exceptions.NotFoundElementException;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
@@ -16,10 +17,11 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.ItemRequestServiceImpl;
 import ru.practicum.shareit.request.storage.ItemRequestStorage;
-import ru.practicum.shareit.request.utils.ItemRequestUtils;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +38,7 @@ public class ItemRequestServiceImplTest {
     @Mock
     private ItemStorage itemStorage;
     @Mock
-    private ItemRequestUtils utils;
+    private UserStorage userStorage;
     @InjectMocks
     private ItemRequestServiceImpl service;
     private Item item;
@@ -85,7 +87,7 @@ public class ItemRequestServiceImplTest {
 
     @Test
     void shouldCreateRequest() {
-        Mockito.when(utils.validationRequest(itemRequestDto, user.getId())).thenReturn(itemRequest);
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(Optional.ofNullable(user));
         Mockito.when(itemRequestStorage.save(any(ItemRequest.class))).thenReturn(itemRequest);
 
         ItemRequestDto result = service.create(itemRequestDto, user.getId());
@@ -95,13 +97,14 @@ public class ItemRequestServiceImplTest {
         assertThat(itemRequest.getDescription(), equalTo(result.getDescription()));
         assertThat(itemRequest.getCreated(), equalTo(result.getCreated()));
 
-        Mockito.verify(itemRequestStorage, times(1)).save(itemRequest);
+        Mockito.verify(itemRequestStorage, times(1)).save(any(ItemRequest.class));
     }
 
     @Test
     void shouldFindAllByUserId() {
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(Optional.ofNullable(user));
         Mockito.when(itemRequestStorage.findAllByRequesterId(user.getId())).thenReturn(List.of(itemRequest));
-        Mockito.when(utils.addItemsAndConvertToDto(any(ItemRequest.class))).thenReturn(itemRequestDto);
+        Mockito.when(itemStorage.findAllByRequestId(itemRequestDto.getId())).thenReturn(Collections.emptyList());
 
         List<ItemRequestDto> result = service.findAllByUserId(user.getId());
 
@@ -115,7 +118,8 @@ public class ItemRequestServiceImplTest {
     @Test
     void shouldFindByUserIdAndRequestId() {
         Mockito.when(itemRequestStorage.findById(itemRequest.getRequester().getId())).thenReturn(Optional.ofNullable(itemRequest));
-        Mockito.when(utils.addItemsAndConvertToDto(any(ItemRequest.class))).thenReturn(itemRequestDto);
+        Mockito.when(itemStorage.findAllByRequestId(itemRequestDto.getId())).thenReturn(Collections.emptyList());
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(Optional.ofNullable(user));
 
         ItemRequestDto result = service.findByUserIdAndRequestId(user.getId(), itemRequest.getRequester().getId());
 
@@ -130,7 +134,7 @@ public class ItemRequestServiceImplTest {
     void shouldFindAllByUserIdPageable() {
         Mockito.when(itemRequestStorage.findAllByRequesterIdIsNotOrderByCreatedDesc(user.getId(),
                 PageRequest.of(1 / 1, 1))).thenReturn(List.of(itemRequest));
-        Mockito.when(utils.addItemsAndConvertToDto(any(ItemRequest.class))).thenReturn(itemRequestDto);
+        Mockito.when(itemStorage.findAllByRequestId(itemRequestDto.getId())).thenReturn(Collections.emptyList());
 
         List<ItemRequestDto> result = service.findAllPageableByUserId(user.getId(), 1, 1);
 
@@ -140,5 +144,39 @@ public class ItemRequestServiceImplTest {
 
         Mockito.verify(itemRequestStorage, times(1))
                 .findAllByRequesterIdIsNotOrderByCreatedDesc(user.getId(), PageRequest.of(1 / 1, 1));
+    }
+
+    @Test
+    void shouldValidateRequest() {
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+
+        ItemRequest result = service.validationRequest(itemRequestDto, user.getId());
+
+        Assertions.assertNotNull(result);
+        assertThat(itemRequest.getId(), equalTo(result.getId()));
+        assertThat(itemRequest.getDescription(), equalTo(result.getDescription()));
+        assertThat(itemRequest.getRequester().getId(), equalTo(result.getRequester().getId()));
+
+        Mockito.verify(userStorage, times(1)).findById(user.getId());
+    }
+
+    @Test
+    void isUser() {
+        Assertions.assertThrows(NotFoundElementException.class, () -> service.isUser(15));
+    }
+
+    @Test
+    void shouldAddItemsAndConvertToDto() {
+        Mockito.when(itemStorage.findAllByRequestId(itemRequest.getId())).thenReturn(List.of(item));
+
+        ItemRequestDto result = service.addItemsAndConvertToDto(itemRequest);
+
+        Assertions.assertNotNull(result);
+        assertThat(itemRequest.getId(), equalTo(result.getId()));
+        assertThat(itemRequest.getDescription(), equalTo(result.getDescription()));
+        assertThat(itemRequestDto.getItems().size(), equalTo(result.getItems().size()));
+        assertThat(itemRequestDto.getItems().get(0).getId(), equalTo(result.getItems().get(0).getId()));
+
+        Mockito.verify(itemStorage, times(1)).findAllByRequestId(itemRequest.getId());
     }
 }
