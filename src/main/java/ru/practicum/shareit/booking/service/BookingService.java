@@ -15,9 +15,9 @@ public interface BookingService {
 
     BookingDto updateStatus(Integer userId, Integer bookingId, boolean approved);
 
-    List<BookingDto> findAllByBooker(Integer userId, String state);
+    List<BookingDto> findAllByBooker(Integer userId, String state, Integer from, Integer size);
 
-    List<BookingDto> findAllByOwner(Integer userId, String state);
+    List<BookingDto> findAllByOwner(Integer userId, String state, Integer from, Integer size);
 
     Booking getLastBooking(Integer itemId);
 

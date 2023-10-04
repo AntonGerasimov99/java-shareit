@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.State;
@@ -21,14 +23,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingStorage bookingRepository;
+    private final BookingStorage bookingStorage;
     private final BookingUtils bookingUtils;
 
     @Override
     @Transactional
     public BookingDto create(Integer userId, BookingDto bookingDto) {
         Booking booking = bookingUtils.validation(userId, bookingDto);
-        return BookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingStorage.save(booking));
     }
 
     @Override
@@ -50,34 +52,35 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(StatusEnum.REJECTED);
         }
-        return BookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingStorage.save(booking));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findAllByBooker(Integer userId, String state) {
+    public List<BookingDto> findAllByBooker(Integer userId, String state, Integer from, Integer size) {
         bookingUtils.isUser(userId);
         State stateEnum = State.checkState(state);
         LocalDateTime now = LocalDateTime.now();
+        Pageable pageable = PageRequest.of(from / size, size);
         List<Booking> result;
         switch (stateEnum) {
             case ALL:
-                result = bookingRepository.findAllByBookerIdOrderByStartDesc(userId);
+                result = bookingStorage.findAllByBookerIdOrderByStartDesc(userId, pageable);
                 break;
             case CURRENT:
-                result = bookingRepository.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
+                result = bookingStorage.findAllByBookerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
                 break;
             case PAST:
-                result = bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
+                result = bookingStorage.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
                 break;
             case FUTURE:
-                result = bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now);
+                result = bookingStorage.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
                 break;
             case WAITING:
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
+                result = bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
                 break;
             case REJECTED:
-                result = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
+                result = bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -90,29 +93,30 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findAllByOwner(Integer userId, String state) {
+    public List<BookingDto> findAllByOwner(Integer userId, String state, Integer from, Integer size) {
         bookingUtils.isUser(userId);
         State stateEnum = State.checkState(state);
         LocalDateTime now = LocalDateTime.now();
+        Pageable pageable = PageRequest.of(from / size, size);
         List<Booking> result;
         switch (stateEnum) {
             case ALL:
-                result = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
+                result = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(userId, pageable);
                 break;
             case CURRENT:
-                result = bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
+                result = bookingStorage.findAllByItemOwnerIdAndStartBeforeAndEndIsAfterOrderByStartDesc(userId, now, now, pageable);
                 break;
             case PAST:
-                result = bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
+                result = bookingStorage.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now, pageable);
                 break;
             case FUTURE:
-                result = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now);
+                result = bookingStorage.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(userId, now, pageable);
                 break;
             case WAITING:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING);
+                result = bookingStorage.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.WAITING, pageable);
                 break;
             case REJECTED:
-                result = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED);
+                result = bookingStorage.findAllByItemOwnerIdAndStatusOrderByStartDesc(userId, StatusEnum.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStatusException("Unknown state: " + state);
@@ -126,21 +130,21 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public Booking getByBookingId(Integer bookingId) {
-        return bookingRepository.findById(bookingId)
+        return bookingStorage.findById(bookingId)
                 .orElseThrow(() -> new NotFoundElementException("Букинг не найден"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getLastBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsBeforeOrderByStartDesc(itemId, LocalDateTime.now())
+        return bookingStorage.findFirstByItemIdAndStartIsBeforeOrderByStartDesc(itemId, LocalDateTime.now())
                 .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Booking getNextBooking(Integer itemId) {
-        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc(itemId, LocalDateTime.now(),
+        return bookingStorage.findFirstByItemIdAndStartIsAfterAndStatusOrderByStartAsc(itemId, LocalDateTime.now(),
                 StatusEnum.APPROVED).orElse(null);
     }
 }
